@@ -1,12 +1,17 @@
 from database import Database 
 from phone_api import Phone, compare_numbers
 from log import logging
-_logger = logging.getLogger('lds_cleanup.phone_api')
+_logger = logging.getLogger('lds_cleanup.sms_server')
 phn = Phone()
 db = Database()
 
 from flask import Flask, request, redirect, session
 import re
+
+#TODO
+# Make sure receiver has sms enabled
+# Fix Unicode handling problems
+# Fix non-GSM message handling
 
 # The session object makes use of a secret key.
 SECRET_KEY = 'a secret key'

@@ -11,11 +11,6 @@ from lds_scraper import LDSDirectoryScraper
 from log import logging, log_call
 _logger = logging.getLogger('lds_cleanup.directory_updater')
 
-## TODO:
-# Add database transaction for faster updating
-# Way to save other attributes
-# Make the phone numbers all look the same
-
 
 def create_new_member(member, phone_book):
     phone, phone_type = phone_book.lookup(member['phone'])
@@ -37,8 +32,10 @@ def create_new_member(member, phone_book):
     return member 
 
 def update_current_member(ldsorg_data, db_data, phone_book):
+    # This function could probably use a rewrite
     del ldsorg_data['callings']
     change_log = []
+    ldsorg_data2 = {}
     # ldsorg_data['scheduled'] = '' #quick way to delete everyones schedule
     for key in ldsorg_data.keys():
         try:
@@ -46,19 +43,25 @@ def update_current_member(ldsorg_data, db_data, phone_book):
         except KeyError as e:
             db_data[key] = None
 
-        if db_data[key] == ldsorg_data[key]:
-            del ldsorg_data[key]
-        elif key == 'phone' and not compare_numbers(db_data[key],ldsorg_data[key]):
-            phone, phone_type = phone_book.lookup(ldsorg_data['phone'])
-            ldsorg_data['phone'] = phone
-            #this can/will be deleted in a following loop iteration if it's not new
-            ldsorg_data['phone_type'] = phone_type 
-            change_log.append("{} => {}".format(db_data[key],ldsorg_data[key]))
+        if db_data[key] == ldsorg_data[key] and key != 'phone':
+            # del ldsorg_data[key]
+            pass
+        elif key == 'phone':
+            if compare_numbers(db_data[key],ldsorg_data[key]):
+                # del ldsorg_data[key]
+                pass
+            else:
+                phone, phone_type = phone_book.lookup(ldsorg_data['phone'])
+                ldsorg_data2['phone'] = phone
+                #this can/will be deleted in a following loop iteration if it's not new
+                ldsorg_data2['phone_type'] = phone_type 
+                change_log.append("{} => {}".format(db_data[key],ldsorg_data2[key]))
         else:
-            change_log.append("{} => {}".format(db_data[key],ldsorg_data[key]))
+            ldsorg_data2[key] = ldsorg_data[key]
+            change_log.append("{} => {}".format(db_data[key],ldsorg_data2[key]))
     if change_log:
         _logger.info("Updated {ID: >12}: {name} {surname}\n".format(**db_data) + "\n".join(change_log))
-    return ldsorg_data
+    return ldsorg_data2
 
 @log_call(_logger)
 def update():

@@ -1,6 +1,5 @@
-from twilio.rest import TwilioRestClient
-from twilio.rest.lookups import TwilioLookupsClient
-from twilio.rest.exceptions import TwilioRestException
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 import toml
 
 from log import logging
@@ -11,6 +10,8 @@ def clean_number(number):
         return ''
     elif number.startswith('+1'):
         number = number[2:]
+    elif number.startswith('1'):
+        number = number[1:]
     return ''.join(c for c in number if c.isdigit())
 
 def compare_numbers(num1,num2):
@@ -25,27 +26,27 @@ class PhoneBook():
 
     def __init__(self, config=None):
         if config is None: config = toml.load('config.toml')['phone']
-        self.client = TwilioLookupsClient(config['account_sid'], config['auth_token'])
+        self.client = Client(config['account_sid'], config['auth_token'])
 
     def lookup(self,number):
         number = clean_number(number)
         if len(number) < 8:
             return number, 'invalid'
         try:
-            number_data = self.client.phone_numbers.get(number, include_carrier_info=True)
+            number_data = self.client.lookups.phone_numbers.get(number).fetch(add_ons='twilio_carrier_info')
             number_data.phone_number 
         except TwilioRestException as e:
             if e.code == 20404:
                 return number, 'invalid'
             else:
                 raise e
-        return number_data.national_format, number_data.carrier['type']
+        return number_data.national_format, number_data.add_ons['results']['twilio_carrier_info']['result']['carrier']['type']
 
 class Phone():
     """docstring for Phone"""
     def __init__(self, config=None): 
         if config is None: config = toml.load('config.toml')['phone']
-        self.client = TwilioRestClient(config['account_sid'], config['auth_token'])
+        self.client = Client(config['account_sid'], config['auth_token'])
         self.phone_number = config['phone_number']
         self.admin_number = config['admin_number']
 
