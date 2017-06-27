@@ -3,12 +3,12 @@ from timeit import default_timer as time
 
 import toml
 
-from email_api import EmailClient
-from database import Database, DATE_FORMAT
-from phone_api import PhoneBook, compare_numbers
-from lds_scraper import LDSDirectoryScraper
+from .email_api import EmailClient
+from .database import Database, DATE_FORMAT
+from .phone_api import PhoneBook, compare_numbers
+from .lds_scraper import LDSDirectoryScraper
 
-from log import logging, log_call
+from .log import logging, log_call
 _logger = logging.getLogger('lds_cleanup.directory_updater')
 
 
@@ -104,9 +104,11 @@ def update():
         email = EmailClient()
         email.new_member_alert(new_members, old_members)
 
-
-if __name__ == '__main__':
+def main():
     t = time()
     update()
     m, s = divmod(round(time()-t), 60)
     _logger.info("It took {:.0f} minutes {:.0f} seconds to update the directory".format(m,s))
+
+if __name__ == '__main__':
+    main()

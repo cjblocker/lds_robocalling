@@ -2,7 +2,7 @@ from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 import toml
 
-from log import logging
+from .log import logging
 _logger = logging.getLogger('lds_cleanup.phone_api')
 
 def clean_number(number):

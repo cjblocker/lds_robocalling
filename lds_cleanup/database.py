@@ -1,8 +1,8 @@
 import pyrebase # https://github.com/thisbejim/Pyrebase
 import toml
 
-from phone_api import national_format
-from log import logging
+from .phone_api import national_format
+from .log import logging
 _logger = logging.getLogger('lds_cleanup.database')
 
 ## TODO

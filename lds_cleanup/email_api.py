@@ -1,7 +1,7 @@
 import yagmail
 import datetime
 
-from log import logging
+from .log import logging
 _logger = logging.getLogger('lds_cleanup.email_api')
 # https://github.com/kootenpv/yagmail
 
@@ -45,5 +45,8 @@ class EmailClient():
 						subject="Ward Membership Changes {}".format(datetime.datetime.today()),
 						contents=body);
 		_logger.debug("Sent Ward Membership Change Email")
+
+	def send_email(self, subject, body, to):
+		self.client.send(to=to, subject=subject, contents=body);
 
 
