@@ -52,8 +52,17 @@ def get_saturdays_in(month):
 
     return sats
 
+def clean_number(num):
+    if isinstance(num, int):
+        return num
+    elif isinstance(num, str):
+        if num[0] == '.':
+            return float('0'+num)
+    return float(num)
+
 def compute_member_score(mem, month):
-    score = min([mem['base_score'],1])*10
+    base_score = float(mem['base_score'])
+    score = min([base_score,1])*10
     score += .5*randn()
     if mem.get('days_helped'):
         last_helped = max(mem['days_helped'])
@@ -64,7 +73,7 @@ def compute_member_score(mem, month):
         score -= (6-min([diff*(1.1**(len(mem['days_helped'])-1)), 6]))
     return max([score, 0])
 
-def get_scored_members(db=None):
+def get_scored_members(month, db=None):
     if db is None:
         db = Database()
     members = db.get_scheduled_members('')
@@ -132,15 +141,15 @@ def ischedule(month, pool=None):
     weeks = get_saturdays_in(month)
     for i in range(len(weeks)):
         print("{}: ".format(i) + DATE_FORMAT.format(weeks[i]))
-    idx = input("Choose Week")
+    idx = int(input("Choose Week: "))
     week = weeks[idx]
 
     db = Database()
     if pool is None:
-        pool = get_scored_members(db)
+        pool = get_scored_members(month, db)
 
     for mem in pool:
-        c = input("Assign {ID: >12}: {name: <15} {surname: <15}, {score:2.3f}, txt:{sms_pref}, e:{email_pref}?".format(**mem)).lower()
+        c = input("Assign {ID: >12}: {name: <15} {surname: <15}, {score:2.3f}, txt:{sms_pref}, e:{email_pref} (Y/n)? ".format(**mem)).lower()
         if c == 'exit':
             return
         if c == 'next':

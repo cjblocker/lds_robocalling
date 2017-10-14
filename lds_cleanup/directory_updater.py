@@ -80,7 +80,9 @@ def update():
         current_keys = []
     new_members = []
 
+    count = 0
     for member in ldsorg.get_ward_member_generator():
+        count += 1
         member_info = ldsorg.get_member_info(member['ID'])
         if str(member['ID']) in current_keys:
             current_keys.remove(member['ID'])
@@ -93,6 +95,9 @@ def update():
         if updated:
             updated.update({'ID':member['ID']})
             db.save_member(updated)
+
+    db.add_membership_count(count)
+    _logger.info("Current directory count is {}".format(count))
 
     if new_members or current_keys:
         old_members = []

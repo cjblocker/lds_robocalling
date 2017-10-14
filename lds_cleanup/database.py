@@ -1,5 +1,6 @@
 import pyrebase # https://github.com/thisbejim/Pyrebase
 import toml
+from datetime import datetime
 
 from .phone_api import national_format
 from .log import logging
@@ -80,4 +81,13 @@ class Database():
     def delete_member(self, member):
         _logger.debug("Deleting %s",member)
         self.db.child('member').child(member['ID']).remove()
+
+    def add_membership_count(self, num):
+        self.db.child('stat').child('membership').update({DATE_FORMAT.format(datetime.now()):num})
+
+    def add_fb_count(self, num):
+        self.db.child('stat').child('fb_count').update({DATE_FORMAT.format(datetime.now()):num})
+
+    def add_fb_active_count(self, num):
+        self.db.child('stat').child('fb_active_count').update({DATE_FORMAT.format(datetime.now()):num})
 
