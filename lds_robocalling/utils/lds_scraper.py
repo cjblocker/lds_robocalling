@@ -13,9 +13,17 @@ from PIL import Image
 
 _login_url=r'https://ident.lds.org/sso/UI/Login?service=credentials'
 _directory_url = r'https://www.lds.org/directory/?lang=eng'
-_member_list_url = 'https://www.lds.org/directory/services/web/v3.0/mem/member-list/{}'
-_member_url = 'https://www.lds.org/directory/services/web/v3.0/mem/householdProfile/{}?imageSize=MEDIUM'
-_unit_list_url = r'https://www.lds.org/directory/services/web/v3.0/unit/current-user-units/'
+_directory_member_list_url = 'https://www.lds.org/directory/services/web/v3.0/mem/member-list/{unit_num}' # Lists members names, IDs, and gender
+_ysa_list_url = r'https://www.lds.org/mls/mbr/services/orgs/sub-orgs-with-callings?lang=eng&subOrgId=1140320' # YSA list with age, phone, email 
+_member_household_url = 'https://www.lds.org/directory/services/web/v3.0/mem/householdProfile/{ID}?imageSize=MEDIUM' # Get info about a particular member, including contact, geolocation, calling, etc (no age)
+_unit_list_url = r'https://www.lds.org/directory/services/web/v3.0/unit/current-user-units/' # Get information about units your in
+_search_name_url = 'https://www.lds.org/mls/mbr/services/member-lookup?includeEmailAndPhoneSearch=true&includeOutOfUnitMembers=true&lang=eng&term={}' # Get information about a particular member by name, includes email, phone, gender, age
+_member_profile_url = 'https://www.lds.org/mls/mbr/records/member-profile/service/{ID}?lang=eng' # Includes age, but lacks longitude, latitude, calling
+_member_callings_url = 'https://www.lds.org/mls/mbr/records/member-profile/callings-and-classes/{ID}?lang=eng' # Gets a lot of information about an individuals callings and classes
+_htvt_url = 'https://www.lds.org/htvt/services/v1/{unit_num}/members/individualProfile/{ID}/{ID}' # Returns IDs of home and visiting teachers
+_my_id_url = 'https://www.lds.org/directory/services/web/v3.0/mem/current-user-info/' # returns current user's ID
+_member_list_url = 'https://www.lds.org/mls/mbr/services/report/member-list?lang=eng&unitNumber={unit_num}'
+_recent_convert_url = 'https://www.lds.org/mls/mbr/services/report/new-member/unit/{unit_num}/12?lang=eng'
 
 _a2ysa_unit_num = 200549
 _keyring_system_id = 'ldsorg'
@@ -86,7 +94,7 @@ class LDSDirectoryScraper():
         return password 
 
     def get_ward_member_generator(self,unit_num=None):
-        raw_list = self.scrape( _member_list_url.format(unit_num or self.unit_num) ).json()
+        raw_list = self.scrape( _directory_member_list_url.format(unit_num or self.unit_num) ).json()
         for house in raw_list:
             member = {
                 'surname' : house['headOfHouse']['surname'],
@@ -96,18 +104,45 @@ class LDSDirectoryScraper():
             }
             yield member
 
+    def get_ysa_member_list(self):
+        raw_list = self.scrape( _ysa_list_url ).json()[0]['members']
+        res =[]
+        for mem in raw_list:
+            name = mem['spokenName'].split(' ')
+            member = {
+                'ID' : mem['id'],
+                'name' : name[0],
+                'surname': name[-1],
+                'gender': 'MALE' if mem['genderLabelShort'] == 'M' else 'FEMALE',
+                'birthdate' : mem['birthDate'],
+                'email' : mem['email'] or mem['householdEmail'],
+                'phone' : mem['phone'] or mem['householdPhone'],
+            }
+            member.update(self.get_member_info(mem['id']))
+            res.append(member)
+        return res 
+
     def get_member_info(self, ID):
-        member = self.scrape(_member_url.format(ID)).json()
+        member = self.scrape(_member_household_url.format(ID)).json()
         member_data = {
             'phone': member['headOfHousehold']['phone'] or member['householdInfo']['phone'],
             'email': member['headOfHousehold']['email'] or member['householdInfo']['email'],
-            'callings': member['headOfHousehold']['callings']
+            'callings': member['headOfHousehold']['callings'],
+            'address': {
+                'street1': member['householdInfo']['address']['addr1'],
+                'street2': member['householdInfo']['address']['addr2'],
+                'city': member['householdInfo']['address']['city'],
+                'state': member['householdInfo']['address']['state'],
+                'zip': member['householdInfo']['address']['postal'],
+                'longitude': member['householdInfo']['address']['longitude'],
+                'latitude': member['householdInfo']['address']['latitude']
+            }
         }
         return member_data
 
     def get_member_photo(self, ID):
         """ this is just a stub, shows the image instead of returning it, not sure how I want to interface it"""
-        member = self.scrape(_member_url.format(ID)).json()
+        member = self.scrape(_member_household_url.format(ID)).json()
         r = self.scrape(member['headOfHousehold']['photoUrl'] or member['householdInfo']['photoUrl'],stream=True)
         r.raw.decode_content = True  # Required to decompress gzip/deflate compressed responses.
         with Image.open(r.raw) as img:

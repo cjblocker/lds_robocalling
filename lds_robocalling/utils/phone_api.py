@@ -3,7 +3,7 @@ from twilio.base.exceptions import TwilioRestException
 import toml
 
 from .log import logging
-_logger = logging.getLogger('lds_cleanup.phone_api')
+_logger = logging.getLogger('lds_robocalling.utils.phone_api')
 
 def clean_number(number):
     if number is None:

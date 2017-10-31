@@ -1,10 +1,9 @@
-from lds_cleanup.database import Database 
-from lds_cleanup.log import logging, log_call
+from lds_robocalling.utils.database import Database 
+from lds_robocalling.utils.log import logging, log_call
 
-from lds_cleanup.directory_updater import main as update_directory
-from lds_cleanup.scheduler import main as run_scheduler
-from lds_cleanup.fb_update import update_member_fb_data
-
+from lds_robocalling.utils.directory_updater import main as update_directory
+# from lds_robocalling.cleanup.scheduler import main as run_scheduler
+from lds_robocalling.utils.fb_update import update_member_fb_data
 
 _logger = logging.getLogger('CL tool')
 db = Database()

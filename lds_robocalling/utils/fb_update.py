@@ -2,7 +2,7 @@ import requests
 
 from .database import Database
 from .log import logging
-_logger = logging.getLogger('lds_cleanup.fb_update')
+_logger = logging.getLogger('lds_robocalling.utils.fb_update')
 
 req = {
     'base_url' : 'https://graph.facebook.com/v2.9',

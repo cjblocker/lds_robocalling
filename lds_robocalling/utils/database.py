@@ -4,7 +4,7 @@ from datetime import datetime
 
 from .phone_api import national_format
 from .log import logging
-_logger = logging.getLogger('lds_cleanup.database')
+_logger = logging.getLogger('lds_robocalling.utils.database')
 
 ## TODO
 # Create Database "Interface"

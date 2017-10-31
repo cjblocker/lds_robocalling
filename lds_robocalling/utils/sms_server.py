@@ -1,7 +1,7 @@
 from database import Database 
 from phone_api import Phone, compare_numbers
 from log import logging
-_logger = logging.getLogger('lds_cleanup.sms_server')
+_logger = logging.getLogger('lds_robocalling.utils.sms_server')
 phn = Phone()
 db = Database()
 

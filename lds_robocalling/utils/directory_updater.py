@@ -9,7 +9,7 @@ from .phone_api import PhoneBook, compare_numbers
 from .lds_scraper import LDSDirectoryScraper
 
 from .log import logging, log_call
-_logger = logging.getLogger('lds_cleanup.directory_updater')
+_logger = logging.getLogger('lds_robocalling.utils.directory_updater')
 
 
 def create_new_member(member, phone_book):

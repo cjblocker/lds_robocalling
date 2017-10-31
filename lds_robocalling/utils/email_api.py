@@ -2,7 +2,7 @@ import yagmail
 import datetime
 
 from .log import logging
-_logger = logging.getLogger('lds_cleanup.email_api')
+_logger = logging.getLogger('lds_robocalling.utils.email_api')
 # https://github.com/kootenpv/yagmail
 
 '''

@@ -2,10 +2,10 @@ import logging
 from functools import wraps
 
 # create logger with 'spam_application'
-logger = logging.getLogger('lds_cleanup')
+logger = logging.getLogger('lds_robocalling')
 logger.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
-fh = logging.FileHandler('log.log')
+fh = logging.FileHandler('lds_robocalling_log.log')
 fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
