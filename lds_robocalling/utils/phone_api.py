@@ -31,16 +31,16 @@ class PhoneBook():
     def lookup(self,number):
         number = clean_number(number)
         if len(number) < 8:
-            return number, 'invalid'
+            return 'invalid'
         try:
             number_data = self.client.lookups.phone_numbers.get(number).fetch(add_ons='twilio_carrier_info')
             number_data.phone_number 
         except TwilioRestException as e:
             if e.code == 20404:
-                return number, 'invalid'
+                return 'invalid'
             else:
                 raise e
-        return number_data.national_format, number_data.add_ons['results']['twilio_carrier_info']['result']['carrier']['type']
+        return number_data.add_ons['results']['twilio_carrier_info']['result']['carrier']['type']
 
 class Phone():
     """docstring for Phone"""
