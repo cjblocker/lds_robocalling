@@ -1,4 +1,4 @@
-from phone_api import national_format, PhoneBook
+from ..utils.phone_api import national_format, PhoneBook
 
 _phone_book = PhoneBook()
 
@@ -11,7 +11,7 @@ class ContactCard(object):
     def __init__(self, db_dict={}, change_log={}):
         super(ContactCard, self).__init__()
 
-        self._pref = db_dict.get('pref', None)
+        self._pref = db_dict.get('contact_pref', None)
         
         self._phone = db_dict.get('phone', None)
         self._phone_type = db_dict.get('phone_type', None)
@@ -35,14 +35,14 @@ class ContactCard(object):
             raise ValueError(f'{pref} is not a valid contact preference')
         if pref != self._pref:
             self._pref = pref
-            self._change_log['pref'] = self._pref
+            self._change_log['contact_pref'] = self._pref
     pref = property(fget=lambda self: self._pref, fset=set_pref)
 
     def set_phone(self, phn_num):
         phn_num = national_format(phn_num)
         if phn_num != self._phone:
             self._phone = phn_num
-            self.change_log['phone'] = self._phone
+            self._change_log['phone'] = self._phone
 
             self._phone_type = _phone_book.lookup(self._phone)
             self._change_log['phone_type'] = self._phone_type

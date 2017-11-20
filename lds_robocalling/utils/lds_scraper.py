@@ -44,7 +44,7 @@ _headers = {
 
 
 
-class LDSDirectoryScraper():
+class LDSorgScraper():
     """Scraper for LDS.org ward directories
     This was created for a YSA ward, where every member is the head of household
     so it only returns information on the head of household, though it could most
@@ -158,4 +158,24 @@ class LDSDirectoryScraper():
     		if name in member['name'].lower().split(" ") and surname == member['surname'].lower():
     			return member['ID']
     	return -1
+
+    def get_recent_convert_ids(self):
+        raw_list = self.scrape(_recent_convert_url.format(unit_num=self.unit_num)).json()
+        return [mem['id'] for mem in raw_list]
+
+    def get_member_list(self):
+        """ Just basic info on each member"""
+        res = []
+        raw_list = self.scrape(_member_list_url.format(unit_num=self.unit_num)).json()
+        for mem in raw_list:
+            surname = mem['name'].split(', ')[0]
+            member_data = {
+                'name': mem['givenName'],
+                'surname': surname,
+                'gender': mem['gender'],
+                'birthDate': mem['birthDate'],
+                'ID': mem['id']
+            }
+            res.append(member_data)
+        return res 
 

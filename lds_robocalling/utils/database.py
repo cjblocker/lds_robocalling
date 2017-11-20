@@ -5,6 +5,7 @@ from datetime import datetime
 from .phone_api import national_format
 from .log import logging
 _logger = logging.getLogger('lds_robocalling.utils.database')
+from ..model.member import Member 
 
 ## TODO
 # Create Database "Interface"
@@ -23,20 +24,9 @@ class Database():
         self.member = {}
         _logger.debug("Database Initialized")
 
-    def start_transaction(self): 
-        print("This Function is not currently working!")
-        assert( not self.wait) #TODO: Replace by throwing real error
-        self.wait = True
-
-    def close_transaction(self):
-        print("This Function is not currently working!")
-        self.db.update(self.member) # ERROR: This is doing a set, not update!
-        self.member = {}
-        self.wait = False
-
     def get_member_by_id(self, ID):
         """Return a dictionary from the database corresponding to ID"""
-        return dict(self.db.child('member').child(ID).get().val())
+        return Member(dict(self.db.child('member').child(ID).get().val()))
 
     def get_member_by_phone_number(self, num):
         num = national_format(num)
@@ -44,7 +34,7 @@ class Database():
             res = self.db.child('member').order_by_child('phone').equal_to(num).get().val().values()[0]
         except IndexError:
             res = None
-        return res 
+        return Member(res) if res else None
 
     def get_member_by_name(self, name, surname):
         try:
@@ -52,35 +42,34 @@ class Database():
             
             for r in res:
                 if name.lower() in str(r.get('name')).lower():
-                    return r
+                    return Member(r)
             return None
             
         except IndexError:
             return None
 
+    def save_members(self, mem_list):
+        if isinstance(mem_list, dict):
+            mem_list = mem_list.values()
+        for mem in mem_list:
+            save_member(mem)
+
     def save_member(self, member):
         _logger.debug("Updating %s",member)
-        if not self.wait:
-            self.db.child('member').child(member['ID']).update(member)
-        else:
-            self.member.update({r'member/'+member['ID']+r'/':member})
+        self.db.child('metalog').child('member').child(member.id).update({DATE_FORMAT.format(datetime.now()):member._change_log})
+        self.db.child('member').child(member.id).update(member._change_log)
+        member._change_log = {}
 
     def get_member_ids(self):
         """Return a list of member ID numbers that are keys for database"""
         return self.db.child('member').shallow().get().each()
 
     def get_all_members(self):
-        return self.db.child('member').get().val()
-
-    def get_scheduled_members(self, date):
-        if date is None:
-            date = ''
-        date = str(date)
-        return self.db.child('member').order_by_child('scheduled').equal_to(date).get().val()
+        return [Member(mem) for mem in self.db.child('member').get().val()]
 
     def delete_member(self, member):
         _logger.debug("Deleting %s",member)
-        self.db.child('member').child(member['ID']).remove()
+        self.db.child('member').child(member.id).remove()
 
     def add_membership_count(self, num):
         self.db.child('stat').child('membership').update({DATE_FORMAT.format(datetime.now()):num})

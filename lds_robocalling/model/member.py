@@ -1,4 +1,4 @@
-from contact import ContactCard
+from .contact import ContactCard
 
 GENDER = {'MALE','FEMALE'}
 GROUP = {
@@ -28,8 +28,6 @@ class Member(object):
 
         self._ht = db_dict.get('ht', [])
         self._vt = db_dict.get('vt', [])
-
-        self.metalog = db_dict.get('metalog', {})
 
         self._change_log = {}
         self.contact = ContactCard(db_dict, self._change_log)
