@@ -1,6 +1,5 @@
-from ..utils.phone_api import national_format, PhoneBook
-
-_phone_book = PhoneBook()
+from ..services.phone import national_format
+from ..services import phone 
 
 CONTACT_PREF = {'TEXT', 'CALL', 'EMAIL', 'LETTER', 'FACEBOOK'}
 
@@ -29,76 +28,76 @@ class ContactCard(object):
 
         self._change_log = change_log
 
-    def set_pref(self, pref):
+    def _set_pref(self, pref):
         pref = pref.upper()
         if pref not in CONTACT_PREF:
             raise ValueError(f'{pref} is not a valid contact preference')
         if pref != self._pref:
             self._pref = pref
             self._change_log['contact_pref'] = self._pref
-    pref = property(fget=lambda self: self._pref, fset=set_pref)
 
-    def set_phone(self, phn_num):
+    def _set_phone(self, phn_num):
         phn_num = national_format(phn_num)
         if phn_num != self._phone:
             self._phone = phn_num
             self._change_log['phone'] = self._phone
 
-            self._phone_type = _phone_book.lookup(self._phone)
+            self._phone_type = phone.lookup(self._phone)
             self._change_log['phone_type'] = self._phone_type
-    phone = property(fget=lambda self: self._phone, fset=set_phone)
-    phone_type = property(fget=lambda self: self._phone_type, fset=lambda self, x: None)
 
-    def set_email(self, email):
+    def _set_email(self, email):
         if '@' not in email[1:] or '.' not in email[3:]: #this is a lazy check, should do re
             raise ValueError(f'{email} is not a valid email address')
         if email != self._email:
             self._email = email 
             self._change_log['email'] = self._email
-    email = property(fget=lambda self: self._email, fset=set_email)
 
-    def set_fbid(self, fbid):
+    def _set_fbid(self, fbid):
         if fbid != self._fbid:
             self._fbid = fbid
             self._change_log['fbid'] = self._fbid
-    fbid = property(fget=lambda self: self._fbid, fset=set_fbid)
 
-    def set_streetAddr1(self, streetAddr1):
+    def _set_streetAddr1(self, streetAddr1):
         if streetAddr1 != self._streetAddr1:
             self._streetAddr1 = streetAddr1
             self._change_log['streetAddr1'] = self._streetAddr1
-    streetAddr1 = property(fget=lambda self: self._streetAddr1, fset=set_streetAddr1)
 
-    def set_streetAddr2(self, streetAddr2):
+    def _set_streetAddr2(self, streetAddr2):
         if streetAddr2 != self._streetAddr2:
             self._streetAddr2 = streetAddr2
             self._change_log['streetAddr2'] = self._streetAddr2
-    streetAddr2 = property(fget=lambda self: self._streetAddr2, fset=set_streetAddr2)
 
-    def set_city(self, city):
+    def _set_city(self, city):
         if city != self._city:
             self._city = city
             self._change_log['city'] = self._city
-    city = property(fget=lambda self: self._city, fset=set_city)
 
-    def set_state(self, state):
+    def _set_state(self, state):
         if state != self._state:
             self._state = state
             self._change_log['state'] = self._state
-    state = property(fget=lambda self: self._state, fset=set_state)
 
-    def set_latitude(self, latitude):
+    def _set_latitude(self, latitude):
         if latitude != self._latitude:
             self._latitude = latitude
             self._change_log['latitude'] = self._latitude
-    latitude = property(fget=lambda self: self._latitude, fset=set_latitude)
 
-    def set_longitude(self, longitude):
+    def _set_longitude(self, longitude):
         if longitude != self._longitude:
             self._longitude = longitude
             self._change_log['longitude'] = self._longitude
-    longitude = property(fget=lambda self: self._longitude, fset=set_longitude)
 
 
+    pref = property(fget=lambda self: self._pref, fset=_set_pref)
+    phone = property(fget=lambda self: self._phone, fset=_set_phone)
+    phone_type = property(fget=lambda self: self._phone_type, fset=lambda self, x: None)
+    email = property(fget=lambda self: self._email, fset=_set_email)
+    fbid = property(fget=lambda self: self._fbid, fset=_set_fbid)
+    streetAddr1 = property(fget=lambda self: self._streetAddr1, fset=_set_streetAddr1)
+    streetAddr2 = property(fget=lambda self: self._streetAddr2, fset=_set_streetAddr2)
+    city = property(fget=lambda self: self._city, fset=_set_city)
+    state = property(fget=lambda self: self._state, fset=_set_state)
+    latitude = property(fget=lambda self: self._latitude, fset=_set_latitude)
+    longitude = property(fget=lambda self: self._longitude, fset=_set_longitude)
 
         

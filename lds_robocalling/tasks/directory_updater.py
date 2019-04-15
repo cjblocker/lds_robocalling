@@ -3,20 +3,23 @@ from timeit import default_timer as time
 
 import toml
 
-from .email_api import EmailClient
-from .database import Database, DATE_FORMAT
-from .phone_api import PhoneBook, compare_numbers
-from .lds_scraper import LDSDirectoryScraper
+from ..services import email, phone, db
+from ..services.lds_scraper import LDSorgScraper
+DATE_FORMAT = '{:%Y-%m-%d}'
+from ..utils import log_call
+import logging
+from ..model import Member 
+_logger = logging.getLogger('hollyg.tasks.directory_updater')
 
-from .log import logging, log_call
-_logger = logging.getLogger('lds_robocalling.utils.directory_updater')
+from .. import _config
 
-
-def create_new_member(member, phone_book):
-    phone, phone_type = phone_book.lookup(member['phone'])
+def create_new_member(member):
+    blah = phone.lookup(member['phone'])
+    print(blah)
+    phone_num, phone_type = blah
     # del member['callings']
     member.update({
-        'phone': phone, #This is a subtle bug
+        'phone': phone_num, #This is a subtle bug
         'base_score':1 if member['callings'] else 0,#1
         'phone_type':phone_type,
         'sms_pref':phone_type == 'mobile' or phone_type=='voip',
@@ -31,8 +34,9 @@ def create_new_member(member, phone_book):
     del member['callings']
     return member 
 
-def update_current_member(ldsorg_data, db_data, phone_book):
+def update_current_member(ldsorg_data, db_data):
     # This function could probably use a rewrite
+    db_data = db_data.as_legacy_dict()
     del ldsorg_data['callings']
     change_log = []
     ldsorg_data2 = {}
@@ -47,12 +51,12 @@ def update_current_member(ldsorg_data, db_data, phone_book):
             # del ldsorg_data[key]
             pass
         elif key == 'phone':
-            if compare_numbers(db_data[key],ldsorg_data[key]):
+            if phone.compare_numbers(db_data[key],ldsorg_data[key]):
                 # del ldsorg_data[key]
                 pass
             else:
-                phone, phone_type = phone_book.lookup(ldsorg_data['phone'])
-                ldsorg_data2['phone'] = phone
+                phone_num, phone_type = phone.lookup(ldsorg_data['phone'])
+                ldsorg_data2['phone'] = phone_num
                 #this can/will be deleted in a following loop iteration if it's not new
                 ldsorg_data2['phone_type'] = phone_type 
                 change_log.append("{} => {}".format(db_data[key],ldsorg_data2[key]))
@@ -65,15 +69,12 @@ def update_current_member(ldsorg_data, db_data, phone_book):
 
 @log_call(_logger)
 def update():
-    config = toml.load('config.toml')
-
-    ldsorg = LDSDirectoryScraper(config['lds_org_username'])
-    db = Database(config['database'])
-    phone_book = PhoneBook(config['phone'])
+    ldsorg = LDSorgScraper(_config['lds_org_username'])
 
     # We save about a minute by getting all members at once
     # instead of getting each one as we need it
     db_member_data = db.get_all_members()
+    db_member_data = {mem.id: mem for mem in db_member_data}
     if db_member_data:
         current_keys = list(db_member_data.keys())
     else:
@@ -82,19 +83,22 @@ def update():
 
     count = 0
     for member in ldsorg.get_ward_member_generator():
+        print('.',end='')
         count += 1
         member_info = ldsorg.get_member_info(member['ID'])
         if str(member['ID']) in current_keys:
             current_keys.remove(member['ID'])
-            updated = update_current_member(member_info, db_member_data[member['ID']] ,phone_book)   
+            updated = update_current_member(member_info, db_member_data[member['ID']])   
         else:
             member.update(member_info)
-            updated = create_new_member(member, phone_book)
+            updated = create_new_member(member)
             new_members.append(updated)
 
         if updated:
             updated.update({'ID':member['ID']})
-            db.save_member(updated)
+            mem = Member(updated)
+            mem._change_log = updated
+            db.save_member(mem)
 
     db.add_membership_count(count)
     _logger.info("Current directory count is {}".format(count))
@@ -104,9 +108,8 @@ def update():
         for memID in current_keys:
             old_members.append(db_member_data[memID])
             db.delete_member(db_member_data[memID])
-            _logger.info("Removed {ID: >12}: {name} {surname}".format(**db_member_data[memID]))
+            _logger.info("Removed {ID: >12}: {name} {surname}".format(**(db_member_data[memID].as_legacy_dict())))
 
-        email = EmailClient()
         email.new_member_alert(new_members, old_members)
 
 def main():

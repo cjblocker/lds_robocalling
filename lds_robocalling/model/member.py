@@ -32,6 +32,17 @@ class Member(object):
         self._change_log = {}
         self.contact = ContactCard(db_dict, self._change_log)
 
+    def as_legacy_dict(self):
+        return {
+            'name': self._name,
+            'surname': self._surname,
+            'ID': self._id,
+            'phone': self.contact.phone,
+            'phone_type': self.contact.phone_type,
+            'email': self.contact.email,
+            'callings': [],
+        }
+
     def set_name(self, name):
         name = name.split(',')[-1]
         if name != self._name:

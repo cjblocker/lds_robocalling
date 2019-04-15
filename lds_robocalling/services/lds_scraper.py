@@ -94,7 +94,7 @@ class LDSorgScraper():
         return password 
 
     def get_ward_member_generator(self,unit_num=None):
-        raw_list = self.scrape( _directory_member_list_url.format(unit_num or self.unit_num) ).json()
+        raw_list = self.scrape( _directory_member_list_url.format(unit_num=(unit_num or self.unit_num)) ).json()
         for house in raw_list:
             member = {
                 'surname' : house['headOfHouse']['surname'],
@@ -123,26 +123,29 @@ class LDSorgScraper():
         return res 
 
     def get_member_info(self, ID):
-        member = self.scrape(_member_household_url.format(ID)).json()
+        try:
+            member = self.scrape(_member_household_url.format(ID=ID)).json()
+        except:
+            return {'phone':'', 'email':'', 'callings':[]}
         member_data = {
             'phone': member['headOfHousehold']['phone'] or member['householdInfo']['phone'],
             'email': member['headOfHousehold']['email'] or member['householdInfo']['email'],
             'callings': member['headOfHousehold']['callings'],
-            'address': {
-                'street1': member['householdInfo']['address']['addr1'],
-                'street2': member['householdInfo']['address']['addr2'],
-                'city': member['householdInfo']['address']['city'],
-                'state': member['householdInfo']['address']['state'],
-                'zip': member['householdInfo']['address']['postal'],
-                'longitude': member['householdInfo']['address']['longitude'],
-                'latitude': member['householdInfo']['address']['latitude']
-            }
+            # 'address': {
+            #     # 'street1': member['householdInfo']['address']['addr1'],
+            #     # 'street2': member['householdInfo']['address']['addr2'],
+            #     # 'city': member['householdInfo']['address']['city'],
+            #     # 'state': member['householdInfo']['address']['state'],
+            #     # 'zip': member['householdInfo']['address']['postal'],
+            #     # 'longitude': member['householdInfo']['address']['longitude'],
+            #     # 'latitude': member['householdInfo']['address']['latitude']
+            # }
         }
         return member_data
 
     def get_member_photo(self, ID):
         """ this is just a stub, shows the image instead of returning it, not sure how I want to interface it"""
-        member = self.scrape(_member_household_url.format(ID)).json()
+        member = self.scrape(_member_household_url.format(ID=ID)).json()
         r = self.scrape(member['headOfHousehold']['photoUrl'] or member['householdInfo']['photoUrl'],stream=True)
         r.raw.decode_content = True  # Required to decompress gzip/deflate compressed responses.
         with Image.open(r.raw) as img:

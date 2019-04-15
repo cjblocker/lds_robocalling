@@ -2,10 +2,10 @@ import pyrebase # https://github.com/thisbejim/Pyrebase
 import toml
 from datetime import datetime
 
-from .phone_api import national_format
-from .log import logging
-_logger = logging.getLogger('lds_robocalling.utils.database')
-from ..model.member import Member 
+from .phone import national_format
+import logging
+_logger = logging.getLogger('hollyg.services.database')
+from ..model import Member 
 
 ## TODO
 # Create Database "Interface"
@@ -16,8 +16,7 @@ DATE_FORMAT = '{:%Y-%m-%d}'
 class Database():
     """docstring for Database"""
 
-    def __init__(self, config=None):
-        if config is None: config = toml.load('config.toml')['database']
+    def __init__(self, config):
         config['serviceAccount'] = str(config['serviceAccount'])
         self.db = pyrebase.initialize_app(config).database()
         self.wait = False
@@ -65,7 +64,7 @@ class Database():
         return self.db.child('member').shallow().get().each()
 
     def get_all_members(self):
-        return [Member(mem) for mem in self.db.child('member').get().val()]
+        return [Member(mem) for mem in self.db.child('member').get().val().values()]
 
     def delete_member(self, member):
         _logger.debug("Deleting %s",member)
@@ -79,4 +78,10 @@ class Database():
 
     def add_fb_active_count(self, num):
         self.db.child('stat').child('fb_active_count').update({DATE_FORMAT.format(datetime.now()):num})
+
+    def get_phone_book(self):
+        return self.db.child('PhoneBook').get().val()
+
+    def add_phone_type(self, phone_num, phone_type):
+        self.db.child('PhoneBook').child(phone_num).update(phone_type)
 
